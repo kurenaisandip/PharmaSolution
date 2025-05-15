@@ -7,12 +7,13 @@ import { HelloWave } from '@/components/HelloWave';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import MacAddress from '../native/MacAddress';
 
 export default function HomeScreen() {
   const [deviceInfo, setDeviceInfo] = useState('');
-  const [deviceId, setDeviceId] = useState('');
+  const [macAddress, setMacAddress] = useState('');
 
-  // Get device information using only expo-device
+  // Get device information and MAC address
   async function getDeviceInfo() {
     try {
       // Collect various device information using expo-device
@@ -22,37 +23,41 @@ export default function HomeScreen() {
       const osName = Device.osName || 'Unknown OS';
       const osVersion = Device.osVersion || 'Unknown version';
       
-      // Get device identifier
-      let uuid = '';
+      // Attempt to get MAC address using our module
       try {
-        // Try to get device ID - use a property that's available
-        uuid = Device.osBuildId || Device.osInternalBuildId || Device.deviceName || '';
-        setDeviceId(uuid);
-        console.log('Device ID:', uuid);
+        const mac = await MacAddress.getMacAddress();
+        setMacAddress(mac);
+        console.log('MAC Address:', mac);
+        
+        // Display all the collected info
+        const info = `MAC Address: ${mac || 'Not available'}
+Device Type: ${deviceType}
+Model: ${modelName}
+OS: ${osName} ${osVersion}`;
+        
+        setDeviceInfo(info);
       } catch (e) {
-        console.log('Error getting device ID:', e);
-      }
-      
-      // Method 2: Open Android Settings to view Wi-Fi info which includes MAC address
-      Alert.alert('Device Info', 
-        'For security reasons, direct access to MAC address is restricted in newer Android/iOS versions.\n\n' +
-        'Do you want to open Device Settings where you can manually view your MAC address?',
-        [
-          {
-            text: 'No',
-            style: 'cancel'
-          },
-          {
-            text: 'Yes, Open Settings',
-            onPress: () => {
-              Linking.openSettings();
+        console.error('Error getting MAC address:', e);
+        
+        // If there's an error, we'll display a fallback message
+        Alert.alert('Device Info', 
+          'For security reasons, direct access to MAC address may be restricted.\n\n' +
+          'Do you want to open Device Settings where you can manually view your MAC address?',
+          [
+            {
+              text: 'No',
+              style: 'cancel'
+            },
+            {
+              text: 'Yes, Open Settings',
+              onPress: () => {
+                Linking.openSettings();
+              }
             }
-          }
-        ]
-      );
-      
-      // Display all the collected info
-      const info = `Device ID: ${uuid || 'Not directly accessible'}
+          ]
+        );
+        
+        const info = `MAC Address: Not directly accessible
 Device Type: ${deviceType}
 Model: ${modelName}
 OS: ${osName} ${osVersion}
@@ -60,8 +65,9 @@ OS: ${osName} ${osVersion}
 Note: For privacy/security reasons, MAC addresses 
 cannot be directly accessed programmatically.
 You can view your MAC address in device settings.`;
-      
-      setDeviceInfo(info);
+        
+        setDeviceInfo(info);
+      }
     } catch (error) {
       setDeviceInfo('Error fetching device info: ' + (error instanceof Error ? error.message : String(error)));
       console.error(error);
@@ -84,9 +90,9 @@ You can view your MAC address in device settings.`;
       
       <Button
         onPress={getDeviceInfo}
-        title="Get Device Info"
+        title="Get MAC Address"
         color="#841584"
-        accessibilityLabel="Get device information"
+        accessibilityLabel="Get device MAC address"
       />
 
       {deviceInfo ? (
@@ -96,10 +102,10 @@ You can view your MAC address in device settings.`;
         </ThemedView>
       ) : null}
 
-      {deviceId ? (
+      {macAddress ? (
         <ThemedView style={styles.macContainer}>
-          <ThemedText type="subtitle">Device ID:</ThemedText>
-          <ThemedText selectable={true} style={styles.macText}>{deviceId}</ThemedText>
+          <ThemedText type="subtitle">MAC Address:</ThemedText>
+          <ThemedText selectable={true} style={styles.macText}>{macAddress}</ThemedText>
         </ThemedView>
       ) : null}
 
