@@ -29,6 +29,7 @@
         <category android:name="android.intent.category.DEFAULT"/>
         <category android:name="android.intent.category.BROWSABLE"/>
         <data android:scheme="pharmasolution"/>
+        <data android:scheme="exp+pharmasolution"/>
       </intent-filter>
     </activity>
   </application>
